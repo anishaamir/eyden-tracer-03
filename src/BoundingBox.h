@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types.h"
+#include "ray.h"
 
 struct Ray;
 
@@ -40,7 +41,12 @@ public:
 	 */
 	void extend(Vec3f a)
 	{
-		// --- PUT YOUR CODE HERE ---
+        this->m_max[0] = std::max(this->m_max[0], a[0]);
+        this->m_max[1] = std::max(this->m_max[1], a[1]);
+        this->m_max[2] = std::max(this->m_max[2], a[2]);
+        this->m_min[0] = std::min(this->m_min[0], a[0]);
+        this->m_min[1] = std::min(this->m_min[1], a[1]);
+        this->m_min[2] = std::min(this->m_min[2], a[2]);
 	}
 	
 	/**
@@ -49,7 +55,8 @@ public:
 	 */
 	void extend(const CBoundingBox& box)
 	{
-		// --- PUT YOUR CODE HERE ---
+        this->extend(box.m_max);
+        this->extend(box.m_min);
 	}
 	
 	/**
@@ -58,8 +65,7 @@ public:
 	 */
 	bool overlaps(const CBoundingBox& box)
 	{
-		// --- PUT YOUR CODE HERE ---
-		return true;
+        return (this->m_min[0] < box.m_max[0] && box.m_min[0] < this->m_max[0] && this->m_min[1] < box.m_max[1] && box.m_min[1] < this->m_max[1] && this->m_min[2] < box.m_max[2] && box.m_min[2] < this->m_max[2]);
 	}
 	
 	/**
@@ -70,7 +76,48 @@ public:
 	 */
 	void clip(const Ray& ray, float& t0, float& t1)
 	{
-		// --- PUT YOUR CODE HERE ---
+        Vec3f v_t0, v_t1;
+        
+        float near = -1 * std::numeric_limits<float>::infinity();
+        float far = std::numeric_limits<float>::infinity();
+        
+        for (int i =0; i<3; i++) {
+            if (ray.dir[i] == 0) {
+                if ((ray.org[i] < this->m_min[i]) || (ray.org[i] > this->m_max[i])){
+
+                    t0 = std::numeric_limits<float>::infinity();
+                    t1 = std::numeric_limits<float>::infinity();
+                    return;
+                }
+            }
+            else{
+                v_t0[i] = (this->m_min[i] - ray.org[i]) / ray.dir[i];
+                v_t1[i] = (this->m_max[i] - ray.org[i]) / ray.dir[i];
+
+                if (v_t0[i] > v_t1[i]) { // swapping
+                    Vec3f temp;
+                    temp = v_t1;
+                    v_t1 = v_t0;
+                    v_t0 = temp;
+                }
+
+                if (v_t0[i] > near) { // reset near
+                    near = v_t0[i];
+                }
+
+                if (v_t1[i] < far) { // reset far
+                    far = v_t1[i];
+                }
+
+                if ((near > far) || (far < 0)) { // check for validity
+                    t0 = std::numeric_limits<float>::infinity();
+                    t1 = std::numeric_limits<float>::infinity();
+                    return;
+                }
+            }
+        }
+        t0 = near;
+        t1 = far;
 	}
 	
 	

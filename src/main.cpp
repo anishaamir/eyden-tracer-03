@@ -49,7 +49,7 @@ Mat RenderFrame(void)
 
 int main(int argc, char* argv[])
 {
-	DirectGraphicalModels::Timer::start("Rebdering frame... ");
+	DirectGraphicalModels::Timer::start("Rendering frame... ");
 	Mat img = RenderFrame();
 	DirectGraphicalModels::Timer::stop();
 	imshow("Image", img);
